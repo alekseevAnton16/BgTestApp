@@ -9,6 +9,7 @@ using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
 using Google.Apis.Util.Store;
+using Newtonsoft.Json.Linq;
 
 namespace BGTestApp
 {
@@ -28,14 +29,46 @@ namespace BGTestApp
 
 		public static void Main(string[] args)
 		{
-			var connection = new CPostgreSqlConnection(Settings.Default.Server1ConnectionString);
-			connection.GetDbSize();
+			var connection = GetDatabases();
 
 			var credential = GetSheetCredentials();
 			var service = GetSheetsService(credential);
 			UpdateSpreadSheet(service, SpreadSheetId, Data);
 			Console.WriteLine("Complete");
 			Console.ReadLine();
+		}
+
+		/// <summary>
+		/// Получает список <see cref="CPostgreDatabase"/> из json.
+		/// </summary>
+		private static List<CPostgreDatabase> GetDatabases()
+		{
+			JArray connectionStringsArray;
+			try
+			{
+				connectionStringsArray = JArray.Parse(Settings.Default.ConnectionStrings);
+			}
+			catch (Exception ex)
+			{
+				CStatic.Logger.Error($"{nameof(GetDatabases)}: {ex.Message}");
+				Console.WriteLine("Ошибка при чтении json из файла конфигурации");
+				return null;
+			}
+			
+			var result = new List<CPostgreDatabase>();
+			foreach (var json in connectionStringsArray)
+			{
+				if (json is JObject jsonObject)
+				{
+					var postgreDb = CPostgreDatabase.GetConnectionFromJson(jsonObject);
+					if (postgreDb != null)
+					{
+						result.Add(postgreDb);
+					}
+				}
+			}
+
+			return result;
 		}
 
 		private static UserCredential GetSheetCredentials()

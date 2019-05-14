@@ -23,13 +23,15 @@ namespace BGTestApp.Properties {
             }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Host=192.168.4.122;Port=5432;Database=nprog;User Id=krn;Password=krn;")]
-        public string Server1ConnectionString {
+        [global::System.Configuration.DefaultSettingValueAttribute(@"[{""ServerName"" : ""Server1"", ""DatabaseHost"" : ""192.168.4.122"", ""DatabasePort"" : 5432, ""DatabaseName"" : ""nprog"", ""UserId"" : ""krn"", ""Password"" : ""krn""}, {""ServerName"" : ""Server2"", ""DatabaseHost"" : ""192.168.4.239"", ""DatabasePort"" : 5432, ""DatabaseName"" : ""nprog"", ""UserId"" : ""krn"", ""Password"" : ""krn1015""}]")]
+        public string ConnectionStrings {
             get {
-                return ((string)(this["Server1ConnectionString"]));
+                return ((string)(this["ConnectionStrings"]));
+            }
+            set {
+                this["ConnectionStrings"] = value;
             }
         }
     }
