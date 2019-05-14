@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
+using BGTestApp.Properties;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
@@ -17,7 +18,6 @@ namespace BGTestApp
 		private static readonly string[] ScopesSheets = {SheetsService.Scope.Spreadsheets};
 		private const string ApplicationName = "BGTestApp";
 		private const string SpreadSheetId = "1KewdQFRR898O743PqMfOZTcpWouQT6kZVM0oGEvirlo";
-		private const string Range = "'Server1'!A1:A";
 
 		private static readonly string[,] Data =
 		{
@@ -28,6 +28,9 @@ namespace BGTestApp
 
 		public static void Main(string[] args)
 		{
+			var connection = new CPostgreSqlConnection(Settings.Default.Server1ConnectionString);
+			connection.GetDbSize();
+
 			var credential = GetSheetCredentials();
 			var service = GetSheetsService(credential);
 			UpdateSpreadSheet(service, SpreadSheetId, Data);
