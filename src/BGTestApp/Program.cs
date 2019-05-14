@@ -29,13 +29,15 @@ namespace BGTestApp
 
 		public static void Main(string[] args)
 		{
-			var connection = GetDatabases();
-
-			var credential = GetSheetCredentials();
-			var service = GetSheetsService(credential);
-			UpdateSpreadSheet(service, SpreadSheetId, Data);
-			Console.WriteLine("Complete");
-			Console.ReadLine();
+			var databases = GetDatabases();
+			if (databases != null)
+			{
+				var credential = GetSheetCredentials();
+				var service = GetSheetsService(credential);
+				UpdateSpreadSheet(service, SpreadSheetId, Data);
+				Console.WriteLine("Complete");
+				Console.ReadLine();
+			}
 		}
 
 		/// <summary>

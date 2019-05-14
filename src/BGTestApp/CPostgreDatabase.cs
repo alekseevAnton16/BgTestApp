@@ -32,47 +32,42 @@ namespace BGTestApp
 				DbSize = null;
 			}
 		}
-
+		
 		/// <summary>
 		/// Получает экземпляр <see cref="CPostgreDatabase"/> из json.
 		/// </summary>
-		public static CPostgreDatabase GetConnectionFromJson(string json)
+		public static CPostgreDatabase GetConnectionFromJson(JObject json)
 		{
 			try
 			{
-				return GetConnectionFromJson(JObject.Parse(json));
+				var host = json.ContainsKey("DatabaseHost") ? (string) json["DatabaseHost"] : null;
+				var port = json.ContainsKey("DatabasePort") ? (int) json["DatabasePort"] : default(int);
+				var database = json.ContainsKey("DatabaseName") ? (string) json["DatabaseName"] : null;
+				var userId = json.ContainsKey("UserId") ? (string) json["UserId"] : null;
+				var password = json.ContainsKey("Password") ? (string) json["Password"] : null;
+				if (string.IsNullOrWhiteSpace(host) || port == default(int) || string.IsNullOrWhiteSpace(database) || string.IsNullOrWhiteSpace(userId)
+					|| string.IsNullOrWhiteSpace(password))
+				{
+					return null;
+				}
+
+				var connectionString = $"Host={host};Port={port};Database={database};User Id={userId};Password={password};";
+
+				var postgreDatabase = new CPostgreDatabase
+				{
+					ServerName = json.ContainsKey("ServerName") ? (string) json["ServerName"] : null,
+					ConnectionString = connectionString,
+					_connection = new NpgsqlConnection(connectionString)
+				};
+				postgreDatabase.UpdateDbSize();
+
+				return postgreDatabase;
 			}
-			catch (Exception exception)
+			catch (Exception ex)
 			{
-				CStatic.Logger.Error($"{nameof(GetConnectionFromJson)}: {exception.Message}");
+				CStatic.Logger.Error($"{nameof(GetConnectionFromJson)}: {ex.Message}");
 				return null;
 			}
-		}
-
-		public static CPostgreDatabase GetConnectionFromJson(JObject json)
-		{
-			var host = json.ContainsKey("DatabaseHost") ? (string) json["DatabaseHost"] : null;
-			var port = json.ContainsKey("DatabasePort") ? (int) json["DatabasePort"] : default(int);
-			var database = json.ContainsKey("DatabaseName") ? (string) json["DatabaseName"] : null;
-			var userId = json.ContainsKey("UserId") ? (string) json["UserId"] : null;
-			var password = json.ContainsKey("Password") ? (string) json["Password"] : null;
-			if (string.IsNullOrWhiteSpace(host) || port == default(int) || string.IsNullOrWhiteSpace(database) || string.IsNullOrWhiteSpace(userId)
-			    || string.IsNullOrWhiteSpace(password))
-			{
-				return null;
-			}
-
-			var connectionString = $"Host={host};Port={port};Database={database};User Id={userId};Password={password};";
-
-			var postgreDatabase = new CPostgreDatabase
-			{
-				ServerName = json.ContainsKey("ServerName") ? (string) json["ServerName"] : null,
-				ConnectionString = connectionString,
-				_connection = new NpgsqlConnection(connectionString)
-			};
-			postgreDatabase.UpdateDbSize();
-
-			return postgreDatabase;
 		}
 	}
 }
