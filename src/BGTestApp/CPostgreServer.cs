@@ -35,7 +35,7 @@ namespace BGTestApp
 			catch (Exception ex)
 			{
 				var message = $"{nameof(UpdateDbSize)}: {ex.Message}";
-				CStatic.Logger.Error(message);
+				Program.Logger.Error(message);
 				Program.ConsoleLog(message);
 				DatabaseSize = double.NaN;
 			}
@@ -75,7 +75,7 @@ namespace BGTestApp
 			catch (Exception ex)
 			{
 				var message = $"{nameof(GetConnectionFromJson)}: {ex.Message}";
-				CStatic.Logger.Error(message);
+				Program.Logger.Error(message);
 				Program.ConsoleLog(message);
 				return null;
 			}

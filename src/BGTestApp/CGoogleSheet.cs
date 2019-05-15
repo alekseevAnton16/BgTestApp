@@ -1,88 +1,74 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Threading;
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Services;
+using System.Linq;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
-using Google.Apis.Util.Store;
 
 namespace BGTestApp
 {
-	public class CGoogleSheet
+	public static class CGoogleSheet
 	{
-		private const string ApplicationName = "BGTestApp";
-		private static readonly string[] ScopesSheets = {SheetsService.Scope.Spreadsheets};
-
-		private readonly SheetsService _sheetsService;
-
-		public string SpreadSheetId { get; }
-		
-		public CGoogleSheet(string spreadSheetId, string clientSecretJsonFilePath)
-		{
-			SpreadSheetId = spreadSheetId;
-			var userCredential = GetSheetCredentials(clientSecretJsonFilePath);
-			_sheetsService = GetSheetsService(userCredential);
-		}
-
-		#region CredentialsAndService
-
-		private static UserCredential GetSheetCredentials(string clientSecretJsonFilePath)
+		public static IList<IList<object>> GetSheetRows(SheetsService sheetsService, string range, string spreadSheetId, out bool isSuccess)
 		{
 			try
 			{
-				using (var fileStream = new FileStream(clientSecretJsonFilePath, FileMode.Open, FileAccess.Read))
-				{
-					var credentialPath = Path.Combine(Directory.GetCurrentDirectory(), "sheetsCreds.json");
-					return GoogleWebAuthorizationBroker.AuthorizeAsync(
-						GoogleClientSecrets.Load(fileStream).Secrets,
-						ScopesSheets,
-						"user",
-						CancellationToken.None,
-						new FileDataStore(credentialPath, true)).Result;
-				}
+				var request = sheetsService.Spreadsheets.Values.Get(spreadSheetId, range);
+				isSuccess = true;
+				return request.Execute().Values;
 			}
 			catch (Exception ex)
 			{
-				var message = $"{nameof(GetSheetCredentials)}: {ex.Message}";
-				CStatic.Logger.Error(message);
+				var message = $"{nameof(GetSheetRows)}: {ex.Message}";
+				Program.Logger.Error(message);
 				Program.ConsoleLog(message);
+				isSuccess = false;
 				return null;
 			}
 		}
 
-		private static SheetsService GetSheetsService(UserCredential userCredential)
+		/// <summary>
+		/// Проверяет существующие листы таблицы и создает новые при необходимости.
+		/// </summary>
+		public static bool CheckAndCreateSheets(SheetsService sheetsService, string spreadSheetId, IList<Sheet> allSheets, IReadOnlyCollection<CPostgreServer> postgreServers)
 		{
-			if (userCredential == null)
+			if (sheetsService == null || string.IsNullOrWhiteSpace(spreadSheetId) || allSheets == null || postgreServers == null)
 			{
-				Program.ConsoleLog($"{nameof(GetSheetsService)}: userCredential is null");
-				return null;
+				var message = $"{nameof(CheckAndCreateSheets)}: incorrect input parameters";
+				Program.Logger.Error(message);
+				Program.ConsoleLog(message);
+				return false;
 			}
-			
-			return new SheetsService(new BaseClientService.Initializer
+
+			var needUpdateSheets = false;
+			var namesOfServers = postgreServers.Select(x => x.ServerName).ToList();
+			var titlesOfSheets = allSheets.Select(x => x.Properties.Title).ToList();
+			foreach (var serverName in namesOfServers)
 			{
-				HttpClientInitializer = userCredential,
-				ApplicationName = ApplicationName
-			});
+				if (!titlesOfSheets.Contains(serverName))
+				{
+					CreateSheet(sheetsService, spreadSheetId, serverName);
+					needUpdateSheets = true;
+				}
+			}
+
+			return needUpdateSheets;
 		}
 
-		#endregion
-		
+
 		/// <summary>
 		/// Получает все листы из таблицы.
 		/// </summary>
-		public IList<Sheet> GetAllSheets()
+		public static IList<Sheet> GetAllSheets(SheetsService sheetsService, string spreadSheetId)
 		{
 			try
 			{
-				var spreadSheet = _sheetsService?.Spreadsheets.Get(SpreadSheetId).Execute();
+				var spreadSheet = sheetsService?.Spreadsheets.Get(spreadSheetId).Execute();
 				return spreadSheet?.Sheets;
 			}
 			catch (Exception ex)
 			{
 				var message = $"{nameof(GetAllSheets)}: {ex.Message}";
-				CStatic.Logger.Error(message);
+				Program.Logger.Error(message);
 				Program.ConsoleLog(message);
 				return null;
 			}
@@ -91,7 +77,7 @@ namespace BGTestApp
 		/// <summary>
 		/// Создает лист в таблице.
 		/// </summary>
-		private void CreateSheet(string sheetName)
+		private static void CreateSheet(SheetsService sheetsService, string spreadSheetId, string sheetName)
 		{
 			var addSheetRequest = new AddSheetRequest {Properties = new SheetProperties {Title = sheetName}};
 			BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest
@@ -100,52 +86,9 @@ namespace BGTestApp
 			};
 
 			var batchUpdateRequest =
-				_sheetsService.Spreadsheets.BatchUpdate(batchUpdateSpreadsheetRequest, SpreadSheetId);
+				sheetsService.Spreadsheets.BatchUpdate(batchUpdateSpreadsheetRequest, spreadSheetId);
 
 			batchUpdateRequest.Execute();
-		}
-
-
-		private static void UpdateSpreadSheet(SheetsService sheetsService, string spreadSheetId, string[,] data)
-		{
-			//todo
-			var requests = new List<Request>();
-			for (var i = 0; i < data.GetLength(0); i++)
-			{
-				var values = new List<CellData>();
-				for (var j = 0; j < data.GetLength(1); j++)
-				{
-					values.Add(new CellData
-					{
-						UserEnteredValue = new ExtendedValue
-						{
-							StringValue = data[i, j]
-						}
-					});
-				}
-
-				requests.Add(new Request
-				{
-					UpdateCells = new UpdateCellsRequest
-					{
-						Start = new GridCoordinate
-						{
-							SheetId = 0,
-							RowIndex = i,
-							ColumnIndex = 0,
-						},
-						Rows = new List<RowData> {new RowData {Values = values}},
-						Fields = "userEnteredValue"
-					}
-				});
-			}
-
-			var busr = new BatchUpdateSpreadsheetRequest
-			{
-				Requests = requests
-			};
-
-			sheetsService.Spreadsheets.BatchUpdate(busr, spreadSheetId).Execute();
 		}
 	}
 }

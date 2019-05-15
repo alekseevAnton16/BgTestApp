@@ -3,13 +3,17 @@ using System.Collections.Generic;
 using System.Threading;
 using BGTestApp.Properties;
 using Newtonsoft.Json.Linq;
+using NLog;
 
 namespace BGTestApp
 {
 	public class Program
 	{
+		public static ILogger Logger = LogManager.GetCurrentClassLogger();
+
 		private static void Main()
 		{
+			ConsoleLog("Start");
 			var databases = GetDatabases();
 			Start(databases);
 			Console.ReadLine();
@@ -23,10 +27,14 @@ namespace BGTestApp
 				return;
 			}
 
+			var googleSheet = new CGoogleSpreadSheet(Settings.Default.SpreadSheetId, Settings.Default.ClientSecretJsonFileName);
+			googleSheet.CheckTableSheets(databases);
 			var timeout = Settings.Default.TimeoutInSeconds * 1000;
+
 			while (true)
 			{
 				databases.ForEach(x => x.UpdateDbSize());
+				googleSheet.UpdateGoogleTable(databases);
 				Thread.Sleep(timeout);
 			}
 		}
@@ -44,7 +52,7 @@ namespace BGTestApp
 			catch (Exception ex)
 			{
 				var message = $"{nameof(GetDatabases)}: {ex.Message}";
-				CStatic.Logger.Error(message);
+				Logger.Error(message);
 				ConsoleLog(message);
 				return null;
 			}
@@ -67,7 +75,7 @@ namespace BGTestApp
 
 		public static void ConsoleLog(string message)
 		{
-			Console.WriteLine($"{DateTime.Now:dd.MM.yyyy HH.mm.ss} {message}");
+			Console.WriteLine($"{DateTime.Now:dd.MM.yyyy HH:mm:ss} {message}");
 		}
 	}
 }
