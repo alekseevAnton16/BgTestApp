@@ -34,5 +34,29 @@ namespace BGTestApp.Properties {
                 this["ConnectionStrings"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("client_secret.json")]
+        public string ClientSecretJsonFileName {
+            get {
+                return ((string)(this["ClientSecretJsonFileName"]));
+            }
+            set {
+                this["ClientSecretJsonFileName"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1KewdQFRR898O743PqMfOZTcpWouQT6kZVM0oGEvirlo")]
+        public string SpreadSheetId {
+            get {
+                return ((string)(this["SpreadSheetId"]));
+            }
+            set {
+                this["SpreadSheetId"] = value;
+            }
+        }
     }
 }

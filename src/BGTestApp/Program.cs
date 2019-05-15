@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Threading;
 using BGTestApp.Properties;
 using Google.Apis.Auth.OAuth2;
@@ -15,10 +14,10 @@ namespace BGTestApp
 {
 	public class Program
 	{
-		private const string ClientSecret = "client_secret.json";
-		private static readonly string[] ScopesSheets = {SheetsService.Scope.Spreadsheets};
 		private const string ApplicationName = "BGTestApp";
-		private const string SpreadSheetId = "1KewdQFRR898O743PqMfOZTcpWouQT6kZVM0oGEvirlo";
+
+		private static readonly string[] ScopesSheets = {SheetsService.Scope.Spreadsheets};
+		private static readonly string SpreadSheetId = Settings.Default.SpreadSheetId;
 
 		private static readonly string[,] Data =
 		{
@@ -34,12 +33,13 @@ namespace BGTestApp
 			{
 				var credential = GetSheetCredentials();
 				var service = GetSheetsService(credential);
-				UpdateSpreadSheet(service, SpreadSheetId, Data);
+				//CreateSheet(service, nameof());
+				//UpdateSpreadSheet(service, SpreadSheetId, Data);
 				Console.WriteLine("Complete");
 				Console.ReadLine();
 			}
 		}
-
+		
 		/// <summary>
 		/// Получает список <see cref="CPostgreDatabase"/> из json.
 		/// </summary>
@@ -75,7 +75,7 @@ namespace BGTestApp
 
 		private static UserCredential GetSheetCredentials()
 		{
-			using (var fileStream = new FileStream(ClientSecret, FileMode.Open, FileAccess.Read))
+			using (var fileStream = new FileStream(Settings.Default.ClientSecretJsonFileName, FileMode.Open, FileAccess.Read))
 			{
 				var credentialPath = Path.Combine(Directory.GetCurrentDirectory(), "sheetsCreds.json");
 				return GoogleWebAuthorizationBroker.AuthorizeAsync(
@@ -92,6 +92,23 @@ namespace BGTestApp
 			HttpClientInitializer = userCredential,
 			ApplicationName = ApplicationName
 		});
+
+		/// <summary>
+		/// СОздание нового листа.
+		/// </summary>
+		private static void CreateSheet(SheetsService sheetsService, string sheetName)
+		{
+			var addSheetRequest = new AddSheetRequest {Properties = new SheetProperties {Title = sheetName}};
+			BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest
+			{
+				Requests = new List<Request> {new Request {AddSheet = addSheetRequest}}
+			};
+
+			var batchUpdateRequest =
+				sheetsService.Spreadsheets.BatchUpdate(batchUpdateSpreadsheetRequest, SpreadSheetId);
+
+			batchUpdateRequest.Execute();
+		}
 
 		private static void UpdateSpreadSheet(SheetsService sheetsService, string spreadSheetId, string[,] data)
 		{
