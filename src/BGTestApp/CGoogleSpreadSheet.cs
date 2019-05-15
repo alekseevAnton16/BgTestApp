@@ -109,7 +109,7 @@ namespace BGTestApp
 					continue;
 				}
 
-				if (rows == null && !CGoogleRow.CreateHeaderRow(_sheetsService, SpreadSheetId, sheet.Properties.Index))
+				if (rows == null && !CGoogleRow.CreateHeaderRow(_sheetsService, SpreadSheetId, sheet.Properties.SheetId))
 				{
 					continue;
 				}
@@ -123,9 +123,9 @@ namespace BGTestApp
 				var lastRowIndex = rows.Count == 1
 					? 1
 					: rows.Count - 1;
-				var addRowResult = CGoogleRow.AddRow(_sheetsService, SpreadSheetId, sheet.Properties.Index, server, lastRowIndex);
+				var addRowResult = CGoogleRow.AddRow(_sheetsService, SpreadSheetId, sheet.Properties.SheetId, server, lastRowIndex);
 				lastRowIndex = addRowResult ? lastRowIndex + 1 : lastRowIndex;
-				CGoogleRow.CreateFooterRow(_sheetsService, SpreadSheetId, sheet.Properties.Index, server, lastRowIndex);
+				CGoogleRow.CreateFooterRow(_sheetsService, SpreadSheetId, sheet.Properties.SheetId, server, lastRowIndex);
 			}
 		}
 		
