@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using BGTestApp.Properties;
 using Newtonsoft.Json.Linq;
 
@@ -7,20 +8,33 @@ namespace BGTestApp
 {
 	public class Program
 	{
-		public static void Main(string[] args)
+		private static void Main()
 		{
 			var databases = GetDatabases();
-			if (databases != null)
+			Start(databases);
+			Console.ReadLine();
+		}
+
+		private static void Start(List<CPostgreServer> databases)
+		{
+			if (databases == null)
 			{
-				Console.WriteLine("Complete");
-				Console.ReadLine();
+				ConsoleLog($"{nameof(Start)}: databaseList is null");
+				return;
+			}
+
+			var timeout = Settings.Default.TimeoutInSeconds * 1000;
+			while (true)
+			{
+				databases.ForEach(x => x.UpdateDbSize());
+				Thread.Sleep(timeout);
 			}
 		}
-		
+
 		/// <summary>
-		/// Получает список <see cref="CPostgreDatabase"/> из json.
+		/// Получает список <see cref="CPostgreServer"/> из json.
 		/// </summary>
-		private static List<CPostgreDatabase> GetDatabases()
+		private static List<CPostgreServer> GetDatabases()
 		{
 			JArray connectionStringsArray;
 			try
@@ -29,17 +43,18 @@ namespace BGTestApp
 			}
 			catch (Exception ex)
 			{
-				CStatic.Logger.Error($"{nameof(GetDatabases)}: {ex.Message}");
-				Console.WriteLine("Ошибка при чтении json из файла конфигурации");
+				var message = $"{nameof(GetDatabases)}: {ex.Message}";
+				CStatic.Logger.Error(message);
+				ConsoleLog(message);
 				return null;
 			}
 			
-			var result = new List<CPostgreDatabase>();
+			var result = new List<CPostgreServer>();
 			foreach (var json in connectionStringsArray)
 			{
 				if (json is JObject jsonObject)
 				{
-					var postgreDb = CPostgreDatabase.GetConnectionFromJson(jsonObject);
+					var postgreDb = CPostgreServer.GetConnectionFromJson(jsonObject);
 					if (postgreDb != null)
 					{
 						result.Add(postgreDb);
@@ -48,6 +63,11 @@ namespace BGTestApp
 			}
 
 			return result;
+		}
+
+		public static void ConsoleLog(string message)
+		{
+			Console.WriteLine($"{DateTime.Now:dd.MM.yyyy HH.mm.ss} {message}");
 		}
 	}
 }

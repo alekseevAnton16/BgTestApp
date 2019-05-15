@@ -95,7 +95,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CGoogleSheet.cs" />
-    <Compile Include="CPostgreDatabase.cs" />
+    <Compile Include="CPostgreServer.cs" />
     <Compile Include="CStatic.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

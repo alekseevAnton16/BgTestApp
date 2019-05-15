@@ -4,9 +4,11 @@ using Npgsql;
 
 namespace BGTestApp
 {
-	public class CPostgreDatabase
+	public class CPostgreServer
 	{
-		private const string GetSizeFunctionName = "select pg_size_pretty(pg_database_size";
+		private const string GetSizeFunctionName = "select pg_database_size";
+
+		private static readonly double _dbSizeToGbСoeff = Math.Pow(1024, 3);
 
 		private NpgsqlConnection _connection;
 
@@ -14,29 +16,35 @@ namespace BGTestApp
 
 		public string ConnectionString { get; private set; }
 
-		public string DbSize { get; private set; }
+		public double DatabaseSize { get; private set; }
+
+		public double ServerSize { get; private set; }
 
 		public void UpdateDbSize()
 		{
 			try
 			{
 				_connection.Open();
-				var command = new NpgsqlCommand($"{GetSizeFunctionName}('{_connection.Database}'))", _connection);
+				var command = new NpgsqlCommand($"{GetSizeFunctionName}('{_connection.Database}')", _connection);
 				var result = command.ExecuteScalar();
 				_connection.Close();
-				DbSize = (string) result;
+				DatabaseSize = result is long resultAsLong 
+					? resultAsLong / _dbSizeToGbСoeff
+					: double.NaN;
 			}
 			catch (Exception ex)
 			{
-				CStatic.Logger.Error($"{nameof(UpdateDbSize)}: {ex.Message}");
-				DbSize = null;
+				var message = $"{nameof(UpdateDbSize)}: {ex.Message}";
+				CStatic.Logger.Error(message);
+				Program.ConsoleLog(message);
+				DatabaseSize = double.NaN;
 			}
 		}
 		
 		/// <summary>
-		/// Получает экземпляр <see cref="CPostgreDatabase"/> из json.
+		/// Получает экземпляр <see cref="CPostgreServer"/> из json.
 		/// </summary>
-		public static CPostgreDatabase GetConnectionFromJson(JObject json)
+		public static CPostgreServer GetConnectionFromJson(JObject json)
 		{
 			try
 			{
@@ -53,10 +61,11 @@ namespace BGTestApp
 
 				var connectionString = $"Host={host};Port={port};Database={database};User Id={userId};Password={password};";
 
-				var postgreDatabase = new CPostgreDatabase
+				var postgreDatabase = new CPostgreServer
 				{
 					ServerName = json.ContainsKey("ServerName") ? (string) json["ServerName"] : null,
 					ConnectionString = connectionString,
+					ServerSize = json.ContainsKey("ServerSize") ? (double) json["ServerSize"] : double.NaN,
 					_connection = new NpgsqlConnection(connectionString)
 				};
 				postgreDatabase.UpdateDbSize();
@@ -65,7 +74,9 @@ namespace BGTestApp
 			}
 			catch (Exception ex)
 			{
-				CStatic.Logger.Error($"{nameof(GetConnectionFromJson)}: {ex.Message}");
+				var message = $"{nameof(GetConnectionFromJson)}: {ex.Message}";
+				CStatic.Logger.Error(message);
+				Program.ConsoleLog(message);
 				return null;
 			}
 		}

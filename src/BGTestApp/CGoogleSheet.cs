@@ -15,20 +15,18 @@ namespace BGTestApp
 		private const string ApplicationName = "BGTestApp";
 		private static readonly string[] ScopesSheets = {SheetsService.Scope.Spreadsheets};
 
-		private readonly UserCredential _userCredential;
 		private readonly SheetsService _sheetsService;
 
 		public string SpreadSheetId { get; }
-
-		public string ClientSecretJsonFilePath { get; }
-
+		
 		public CGoogleSheet(string spreadSheetId, string clientSecretJsonFilePath)
 		{
 			SpreadSheetId = spreadSheetId;
-			ClientSecretJsonFilePath = clientSecretJsonFilePath;
-			_userCredential = GetSheetCredentials(clientSecretJsonFilePath);
-			_sheetsService = GetSheetsService(_userCredential);
+			var userCredential = GetSheetCredentials(clientSecretJsonFilePath);
+			_sheetsService = GetSheetsService(userCredential);
 		}
+
+		#region CredentialsAndService
 
 		private static UserCredential GetSheetCredentials(string clientSecretJsonFilePath)
 		{
@@ -45,9 +43,11 @@ namespace BGTestApp
 						new FileDataStore(credentialPath, true)).Result;
 				}
 			}
-			catch (Exception e)
+			catch (Exception ex)
 			{
-				CStatic.Logger.Error($"{nameof(GetSheetCredentials)}: {e.Message}");
+				var message = $"{nameof(GetSheetCredentials)}: {ex.Message}";
+				CStatic.Logger.Error(message);
+				Program.ConsoleLog(message);
 				return null;
 			}
 		}
@@ -56,6 +56,7 @@ namespace BGTestApp
 		{
 			if (userCredential == null)
 			{
+				Program.ConsoleLog($"{nameof(GetSheetsService)}: userCredential is null");
 				return null;
 			}
 			
@@ -66,6 +67,8 @@ namespace BGTestApp
 			});
 		}
 
+		#endregion
+		
 		/// <summary>
 		/// Получает все листы из таблицы.
 		/// </summary>
@@ -76,9 +79,11 @@ namespace BGTestApp
 				var spreadSheet = _sheetsService?.Spreadsheets.Get(SpreadSheetId).Execute();
 				return spreadSheet?.Sheets;
 			}
-			catch (Exception e)
+			catch (Exception ex)
 			{
-				CStatic.Logger.Error($"{nameof(GetAllSheets)}: {e.Message}");
+				var message = $"{nameof(GetAllSheets)}: {ex.Message}";
+				CStatic.Logger.Error(message);
+				Program.ConsoleLog(message);
 				return null;
 			}
 		}
