@@ -33,6 +33,7 @@ namespace BGTestApp
 			{
 				var credential = GetSheetCredentials();
 				var service = GetSheetsService(credential);
+				var allSheets = GetAllSheets(service);
 				//CreateSheet(service, nameof());
 				//UpdateSpreadSheet(service, SpreadSheetId, Data);
 				Console.WriteLine("Complete");
@@ -93,8 +94,14 @@ namespace BGTestApp
 			ApplicationName = ApplicationName
 		});
 
+		private static IList<Sheet> GetAllSheets(SheetsService sheetsService)
+		{
+			var spreadSheet = sheetsService.Spreadsheets.Get(SpreadSheetId).Execute();
+			return spreadSheet.Sheets;
+		}
+
 		/// <summary>
-		/// СОздание нового листа.
+		/// Создание нового листа.
 		/// </summary>
 		private static void CreateSheet(SheetsService sheetsService, string sheetName)
 		{
