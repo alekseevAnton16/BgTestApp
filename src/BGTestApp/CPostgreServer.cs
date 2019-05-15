@@ -14,6 +14,8 @@ namespace BGTestApp
 
 		public string ServerName { get; private set; }
 
+		public string DatabaseName { get; private set; }
+
 		public string ConnectionString { get; private set; }
 
 		public double DatabaseSize { get; private set; }
@@ -64,6 +66,7 @@ namespace BGTestApp
 				var postgreDatabase = new CPostgreServer
 				{
 					ServerName = json.ContainsKey("ServerName") ? (string) json["ServerName"] : null,
+					DatabaseName = database,
 					ConnectionString = connectionString,
 					ServerSize = json.ContainsKey("ServerSize") ? (double) json["ServerSize"] : double.NaN,
 					_connection = new NpgsqlConnection(connectionString)

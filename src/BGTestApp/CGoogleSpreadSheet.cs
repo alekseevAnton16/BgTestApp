@@ -114,6 +114,18 @@ namespace BGTestApp
 					continue;
 				}
 				
+				rows = CGoogleSheet.GetSheetRows(_sheetsService, range, SpreadSheetId, out _);
+				if (rows == null)
+				{
+					continue;
+				}
+
+				var lastRowIndex = rows.Count == 1
+					? 1
+					: rows.Count - 1;
+				var addRowResult = CGoogleRow.AddRow(_sheetsService, SpreadSheetId, sheet.Properties.Index, server, lastRowIndex);
+				lastRowIndex = addRowResult ? lastRowIndex + 1 : lastRowIndex;
+				CGoogleRow.CreateFooterRow(_sheetsService, SpreadSheetId, sheet.Properties.Index, server, lastRowIndex);
 			}
 		}
 		
