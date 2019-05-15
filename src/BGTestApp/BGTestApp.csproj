@@ -94,6 +94,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CGoogleSheet.cs" />
     <Compile Include="CPostgreDatabase.cs" />
     <Compile Include="CStatic.cs" />
     <Compile Include="Program.cs" />
