@@ -37,18 +37,6 @@ namespace BGTestApp.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("client_secret.json")]
-        public string ClientSecretJsonFileName {
-            get {
-                return ((string)(this["ClientSecretJsonFileName"]));
-            }
-            set {
-                this["ClientSecretJsonFileName"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("1KewdQFRR898O743PqMfOZTcpWouQT6kZVM0oGEvirlo")]
         public string SpreadSheetId {
             get {
@@ -56,6 +44,30 @@ namespace BGTestApp.Properties {
             }
             set {
                 this["SpreadSheetId"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("770463699938-rgsg4017hgpkru4tl26bc7v7di5p2375.apps.googleusercontent.com")]
+        public string ClientId {
+            get {
+                return ((string)(this["ClientId"]));
+            }
+            set {
+                this["ClientId"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("4ty1y5nMBcs5SaSDNJAVWFGk")]
+        public string ClientSecret {
+            get {
+                return ((string)(this["ClientSecret"]));
+            }
+            set {
+                this["ClientSecret"] = value;
             }
         }
         

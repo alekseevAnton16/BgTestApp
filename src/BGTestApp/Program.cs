@@ -27,7 +27,7 @@ namespace BGTestApp
 				return;
 			}
 
-			var googleSheet = new CGoogleSpreadSheet(Settings.Default.SpreadSheetId, Settings.Default.ClientSecretJsonFileName);
+			var googleSheet = new CGoogleSpreadSheet(Settings.Default.SpreadSheetId, Settings.Default.ClientId, Settings.Default.ClientSecret);
 			googleSheet.CheckTableSheets(databases);
 			var timeout = Settings.Default.TimeoutInSeconds * 1000;
 

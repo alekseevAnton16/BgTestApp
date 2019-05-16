@@ -5,11 +5,14 @@
     <Setting Name="ConnectionStrings" Type="System.String" Scope="User">
       <Value Profile="(Default)">[{"ServerName" : "Server1", "DatabaseHost" : "192.168.4.122", "DatabasePort" : 5432, "DatabaseName" : "nprog", "UserId" : "krn", "Password" : "krn", "ServerSize" : "1000"}, {"ServerName" : "Server2", "DatabaseHost" : "192.168.4.239", "DatabasePort" : 5432, "DatabaseName" : "nprog", "UserId" : "krn", "Password" : "krn1015", "ServerSize" : "1000"}]</Value>
     </Setting>
-    <Setting Name="ClientSecretJsonFileName" Type="System.String" Scope="User">
-      <Value Profile="(Default)">client_secret.json</Value>
-    </Setting>
     <Setting Name="SpreadSheetId" Type="System.String" Scope="User">
       <Value Profile="(Default)">1KewdQFRR898O743PqMfOZTcpWouQT6kZVM0oGEvirlo</Value>
+    </Setting>
+    <Setting Name="ClientId" Type="System.String" Scope="User">
+      <Value Profile="(Default)">770463699938-rgsg4017hgpkru4tl26bc7v7di5p2375.apps.googleusercontent.com</Value>
+    </Setting>
+    <Setting Name="ClientSecret" Type="System.String" Scope="User">
+      <Value Profile="(Default)">4ty1y5nMBcs5SaSDNJAVWFGk</Value>
     </Setting>
     <Setting Name="TimeoutInSeconds" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">1</Value>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using BGTestApp.Properties;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
@@ -14,7 +15,9 @@ namespace BGTestApp
 	public class CGoogleSpreadSheet
 	{
 		private const string ApplicationName = "BGTestApp";
-		
+		private const string TokenFile = "token.json";
+		private const string DefaultUser = "user";
+
 		private static readonly string[] ScopesSheets = {SheetsService.Scope.Spreadsheets};
 
 		private readonly SheetsService _sheetsService;
@@ -23,29 +26,30 @@ namespace BGTestApp
 
 		public string SpreadSheetId { get; }
 		
-		public CGoogleSpreadSheet(string spreadSheetId, string clientSecretJsonFilePath)
+		public CGoogleSpreadSheet(string spreadSheetId, string clientId, string clientSecret)
 		{
 			SpreadSheetId = spreadSheetId;
-			var userCredential = GetSheetCredentials(clientSecretJsonFilePath);
+			var userCredential = GetSheetCredentials(clientId, clientSecret);
 			_sheetsService = GetSheetsService(userCredential);
 		}
 
 		#region CredentialsAndService
 
-		private static UserCredential GetSheetCredentials(string clientSecretJsonFilePath)
+		private static UserCredential GetSheetCredentials(string clientId, string clientSecret)
 		{
 			try
 			{
-				using (var fileStream = new FileStream(clientSecretJsonFilePath, FileMode.Open, FileAccess.Read))
-				{
-					var credentialPath = Path.Combine(Directory.GetCurrentDirectory(), "sheetsCreds.json");
-					return GoogleWebAuthorizationBroker.AuthorizeAsync(
-						GoogleClientSecrets.Load(fileStream).Secrets,
-						ScopesSheets,
-						"user",
-						CancellationToken.None,
-						new FileDataStore(credentialPath, true)).Result;
-				}
+				var credentialPath = Path.Combine(Directory.GetCurrentDirectory(), TokenFile);
+				return GoogleWebAuthorizationBroker.AuthorizeAsync(
+					new ClientSecrets
+					{
+						ClientId = clientId,
+						ClientSecret = clientSecret
+					}, 
+					ScopesSheets,
+					DefaultUser,
+					CancellationToken.None,
+					new FileDataStore(credentialPath, true)).Result;
 			}
 			catch (Exception ex)
 			{
