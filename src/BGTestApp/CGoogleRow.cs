@@ -11,86 +11,29 @@ namespace BGTestApp
 		private static readonly List<string> Headers = new List<string> {"Сервер", "База данных", "Размер в ГБ", "Дата обновления"};
 
 		/// <summary>
-		/// Создает строку
+		/// Добавляет строку.
 		/// </summary>
-		public static bool CreateRow(SheetsService sheetsService, string spreadSheetId, int? sheetId, ERowType rowType, CPostgreServer server, int lastRowIndex)
+		public static bool AddRow(SheetsService sheetsService, string spreadSheetId, int? sheetId, ERowType rowType, CPostgreServer server, int lastRowIndex)
 		{
+			Request request = null;
 			switch (rowType)
 			{
 				case ERowType.HeaderRow:
-					return CreateHeaderRow(sheetsService, spreadSheetId, sheetId);
-				case ERowType.DbSizeRow:
-					return AddDbSizeRow(sheetsService, spreadSheetId, sheetId, server, lastRowIndex);
-				case ERowType.FooterRow:
-					return CreateFooterRow(sheetsService, spreadSheetId, sheetId, server, lastRowIndex);
-				default:
-					return false;
-			}
-		}
-
-		/// <summary>
-		/// Создает строку с заголовками.
-		/// </summary>
-		private static bool CreateHeaderRow(SheetsService sheetsService, string spreadSheetId, int? sheetId)
-		{
-			var requests = new List<Request>();
-			for (var i = 0; i < Headers.Count; i++)
-			{
-				var header = Headers[i];
-				var value = new CellData
-				{
-					UserEnteredValue = new ExtendedValue
-					{
-						StringValue = header
-					}
-				};
-
-				requests.Add(new Request
-				{
-					UpdateCells = new UpdateCellsRequest
-					{
-						Start = new GridCoordinate
-						{
-							SheetId = sheetId,
-							ColumnIndex = i,
-						},
-						Rows = new List<RowData> {new RowData {Values = new List<CellData> {value}}},
-						Fields = "userEnteredValue"
-					}
-				});
+					request = GetRequestForAddHeaderRow(sheetId);
+					break;
+				case ERowType.DbSizeRow when server != null && sheetId != null && lastRowIndex != 0:
+					request = GetRequestForAddDbSizeRow(server, sheetId, lastRowIndex);
+					break;
+				case ERowType.FooterRow when server != null && sheetId != null && lastRowIndex != 0:
+					request = GetRequestForAddFooterRow(server, sheetId, lastRowIndex);
+					break;
 			}
 
-			var batchUpdate = new BatchUpdateSpreadsheetRequest
-			{
-				Requests = requests
-			};
-
-			try
-			{
-				sheetsService.Spreadsheets.BatchUpdate(batchUpdate, spreadSheetId).Execute();
-				return true;
-			}
-			catch (Exception ex)
-			{
-				var message = $"{nameof(CreateHeaderRow)}: {ex.Message}";
-				Program.Logger.Error(message);
-				Program.ConsoleLog(message);
-				return false;
-			}
-		}
-
-		/// <summary>
-		/// Добавляет строку в лист.
-		/// </summary>
-		/// <returns>Индекс последней строки в листе.</returns>
-		private static bool AddDbSizeRow(SheetsService sheetsService, string spreadSheetId, int? sheetId, CPostgreServer server, int lastRowIndex)
-		{
-			if (server == null)
+			if (request == null)
 			{
 				return false;
 			}
 
-			var request = GetRequestForServerAdd(server, sheetId, lastRowIndex);
 			var batchUpdate = new BatchUpdateSpreadsheetRequest
 			{
 				Requests = new List<Request> {request}
@@ -103,17 +46,51 @@ namespace BGTestApp
 			}
 			catch (Exception ex)
 			{
-				var message = $"{nameof(AddDbSizeRow)}: {ex.Message}";
+				var message = $"{nameof(AddRow)} (rowType = {rowType}): {ex.Message}";
 				Program.Logger.Error(message);
 				Program.ConsoleLog(message);
 				return false;
 			}
 		}
+		
+		/// <summary>
+		/// Получение запроса на добавление заголовка.
+		/// </summary>
+		private static Request GetRequestForAddHeaderRow(int? sheetId)
+		{
+			var cellDataList = new List<CellData>();
+			for (var i = 0; i < Headers.Count; i++)
+			{
+				var header = Headers[i];
+				var value = new CellData
+				{
+					UserEnteredValue = new ExtendedValue
+					{
+						StringValue = header
+					}
+				};
+				cellDataList.Add(value);
+			}
 
+			return new Request
+			{
+				UpdateCells = new UpdateCellsRequest
+				{
+					Start = new GridCoordinate
+					{
+						SheetId = sheetId,
+						ColumnIndex = 0,
+					},
+					Rows = new List<RowData> {new RowData {Values = cellDataList}},
+					Fields = "userEnteredValue"
+				}
+			};
+		}
+		
 		/// <summary>
 		/// Получает запрос на добавление строки с описанием сервера.
 		/// </summary>
-		private static Request GetRequestForServerAdd(CPostgreServer server, int? sheetId, int lastRowIndex)
+		private static Request GetRequestForAddDbSizeRow(CPostgreServer server, int? sheetId, int lastRowIndex)
 		{
 			var serverNameValue = new CellData
 			{
@@ -164,37 +141,7 @@ namespace BGTestApp
 				}
 			};
 		}
-
-		/// <summary>
-		/// Создает строку с заголовками.
-		/// </summary>
-		private static bool CreateFooterRow(SheetsService sheetsService, string spreadSheetId, int? sheetId, CPostgreServer server, int lastRowIndex)
-		{
-			if (server == null)
-			{
-				return false;
-			}
-
-			var request = GetRequestForAddFooterRow(server, sheetId, lastRowIndex);
-			var batchUpdate = new BatchUpdateSpreadsheetRequest
-			{
-				Requests = new List<Request> {request}
-			};
-
-			try
-			{
-				sheetsService.Spreadsheets.BatchUpdate(batchUpdate, spreadSheetId).Execute();
-				return true;
-			}
-			catch (Exception ex)
-			{
-				var message = $"{nameof(CreateFooterRow)}: {ex.Message}";
-				Program.Logger.Error(message);
-				Program.ConsoleLog(message);
-				return false;
-			}
-		}
-
+		
 		/// <summary>
 		/// Получает запрос на добавление строки с описанием сервера.
 		/// </summary>
