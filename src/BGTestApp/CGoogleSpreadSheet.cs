@@ -89,7 +89,11 @@ namespace BGTestApp
 			}
 
 			_sheets.Clear();
-			_sheets.AddRange(allSheets);
+
+			if (allSheets != null)
+			{
+				_sheets.AddRange(allSheets);
+			}
 		}
 
 		/// <summary>
