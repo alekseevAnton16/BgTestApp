@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using BGTestApp.Enums;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
 
@@ -8,6 +9,9 @@ namespace BGTestApp.GoogleSpreadSheet
 {
 	public static class CGoogleSheet
 	{
+		private const string FirstSheetNameInRussian = "Лист1";
+		private const string FirstSheetNameInEnglish = "Sheet1"; 
+
 		public static IList<IList<object>> GetSheetRows(SheetsService sheetsService, string range, string spreadSheetId, out bool isSuccess)
 		{
 			try
@@ -31,22 +35,34 @@ namespace BGTestApp.GoogleSpreadSheet
 		/// </summary>
 		public static bool CheckAndCreateSheets(SheetsService sheetsService, string spreadSheetId, IList<Sheet> allSheets, IReadOnlyCollection<CPostgreServer> postgreServers)
 		{
-			if (sheetsService == null || string.IsNullOrWhiteSpace(spreadSheetId) || allSheets == null || postgreServers == null)
+			if (sheetsService == null || string.IsNullOrWhiteSpace(spreadSheetId) || allSheets == null || !(postgreServers?.Any() ?? false))
 			{
 				var message = $"{nameof(CheckAndCreateSheets)}: incorrect input parameters";
 				Program.Logger.Error(message);
 				Program.ConsoleLog(message);
 				return false;
 			}
-
-			var needUpdateSheets = false;
+			
+			var updateResult = UpdateFirstSheet(sheetsService, spreadSheetId, allSheets, postgreServers.First().ServerName);
+			
 			var namesOfServers = postgreServers.Select(x => x.ServerName).ToList();
 			var titlesOfSheets = allSheets.Select(x => x.Properties.Title).ToList();
+			var addResult = CreateSheets(sheetsService, spreadSheetId, namesOfServers, titlesOfSheets);
+
+			return updateResult || addResult;
+		}
+
+		/// <summary>
+		/// Создает новые листы.
+		/// </summary>
+		private static bool CreateSheets(SheetsService sheetsService, string spreadSheetId, List<string> namesOfServers, List<string> titlesOfSheets)
+		{
+			var needUpdateSheets = false;
 			foreach (var serverName in namesOfServers)
 			{
 				if (!titlesOfSheets.Contains(serverName))
 				{
-					CreateSheet(sheetsService, spreadSheetId, serverName);
+					GetCreateSheetRequest(sheetsService, spreadSheetId, serverName);
 					needUpdateSheets = true;
 				}
 			}
@@ -54,6 +70,21 @@ namespace BGTestApp.GoogleSpreadSheet
 			return needUpdateSheets;
 		}
 
+		/// <summary>
+		/// Обновляет первый лист новой таблицы.
+		/// </summary>
+		private static bool UpdateFirstSheet(SheetsService sheetsService, string spreadSheetId, IList<Sheet> allSheets, string firstSheetTitle)
+		{
+			if (!allSheets.Any())
+			{
+				return false;
+			}
+
+			var sheetInRussian = allSheets.FirstOrDefault(x => string.Equals(x.Properties.Title, FirstSheetNameInRussian));
+			var sheetInEnglish = allSheets.FirstOrDefault(x => string.Equals(x.Properties.Title, FirstSheetNameInEnglish));
+			var targetSheet = sheetInRussian ?? sheetInEnglish;
+			return UpdateSheets(sheetsService, spreadSheetId, EAction.Update, targetSheet?.Properties?.SheetId, firstSheetTitle);
+		}
 
 		/// <summary>
 		/// Получает все листы из таблицы.
@@ -75,20 +106,72 @@ namespace BGTestApp.GoogleSpreadSheet
 		}
 
 		/// <summary>
-		/// Создает лист в таблице.
+		/// Создание/удаление листа.
 		/// </summary>
-		private static void CreateSheet(SheetsService sheetsService, string spreadSheetId, string sheetName)
+		private static bool UpdateSheets(SheetsService sheetsService, string spreadSheetId, EAction action, int? sheetId, string sheetName)
 		{
+			var request = action == EAction.Add
+				? GetCreateSheetRequest(sheetsService, spreadSheetId, sheetName)
+				: GetUpdateSheetRequest(sheetsService, spreadSheetId, sheetId, sheetName);
+			try
+			{
+				request.Execute();
+				return true;
+			}
+			catch (Exception e)
+			{
+				var message = $"{nameof(UpdateSheets)}(action = {action}): {e.Message}";
+				Program.Logger.Error(message);
+				Program.ConsoleLog(message);
+				return false;
+			}
+		}
+
+		/// <summary>
+		/// Получает запрос на создание листа.
+		/// </summary>
+		private static SpreadsheetsResource.BatchUpdateRequest GetCreateSheetRequest(SheetsService sheetsService, string spreadSheetId, string sheetName)
+		{
+			if (string.IsNullOrWhiteSpace(sheetName))
+			{
+				return null;
+			}
+
 			var addSheetRequest = new AddSheetRequest {Properties = new SheetProperties {Title = sheetName}};
-			BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest
+			var batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest
 			{
 				Requests = new List<Request> {new Request {AddSheet = addSheetRequest}}
 			};
 
-			var batchUpdateRequest =
-				sheetsService.Spreadsheets.BatchUpdate(batchUpdateSpreadsheetRequest, spreadSheetId);
+			return sheetsService.Spreadsheets.BatchUpdate(batchUpdateSpreadsheetRequest, spreadSheetId);
+		}
 
-			batchUpdateRequest.Execute();
+		/// <summary>
+		/// Получает запрос на обновление листа.
+		/// </summary>
+		private static SpreadsheetsResource.BatchUpdateRequest GetUpdateSheetRequest(SheetsService sheetsService, string spreadSheetId, int? sheetId, string sheetName)
+		{
+			if (sheetId == null || string.IsNullOrWhiteSpace(sheetName))
+			{
+				return null;
+			}
+
+			var updateSheet = new UpdateSheetPropertiesRequest
+			{
+				Properties = new SheetProperties
+				{
+					SheetId = sheetId,
+					Title = sheetName
+				},
+				Fields = "title"
+			};
+
+			BatchUpdateSpreadsheetRequest batchUpdateSpreadsheetRequest = new BatchUpdateSpreadsheetRequest
+			{
+				Requests = new List<Request> {new Request {UpdateSheetProperties = updateSheet}}
+			};
+
+			return sheetsService.Spreadsheets.BatchUpdate(batchUpdateSpreadsheetRequest, spreadSheetId);
 		}
 	}
 }

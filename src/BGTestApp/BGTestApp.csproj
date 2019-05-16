@@ -94,6 +94,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Enums\EAction.cs" />
     <Compile Include="GoogleSpreadSheet\CGoogleRow.cs" />
     <Compile Include="GoogleSpreadSheet\CGoogleSheet.cs" />
     <Compile Include="GoogleSpreadSheet\CGoogleSpreadSheet.cs" />
