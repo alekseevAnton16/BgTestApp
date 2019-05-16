@@ -82,5 +82,17 @@ namespace BGTestApp.Properties {
                 this["TimeoutInSeconds"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("BGTest")]
+        public string SpreadSheetName {
+            get {
+                return ((string)(this["SpreadSheetName"]));
+            }
+            set {
+                this["SpreadSheetName"] = value;
+            }
+        }
     }
 }

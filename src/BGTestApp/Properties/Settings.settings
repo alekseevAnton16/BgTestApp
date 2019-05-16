@@ -17,5 +17,8 @@
     <Setting Name="TimeoutInSeconds" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">1</Value>
     </Setting>
+    <Setting Name="SpreadSheetName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">BGTest</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

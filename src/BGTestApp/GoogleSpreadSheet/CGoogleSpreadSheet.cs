@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using BGTestApp.Enums;
+using BGTestApp.Properties;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
@@ -20,12 +21,17 @@ namespace BGTestApp.GoogleSpreadSheet
 
 		private static readonly string[] ScopesSheets = {SheetsService.Scope.Spreadsheets};
 
+		/// <summary>
+		/// Наименование создаваемой таблицы.
+		/// </summary>
+		private static readonly string SpreadSheetName = Settings.Default.SpreadSheetName;
+
 		private readonly SheetsService _sheetsService;
 
 		private readonly List<Sheet> _sheets = new List<Sheet>();
 
-		public string SpreadSheetId { get; }
-		
+		public string SpreadSheetId { get; private set; }
+
 		public CGoogleSpreadSheet(string spreadSheetId, string clientId, string clientSecret)
 		{
 			SpreadSheetId = spreadSheetId;
@@ -93,6 +99,59 @@ namespace BGTestApp.GoogleSpreadSheet
 			if (allSheets != null)
 			{
 				_sheets.AddRange(allSheets);
+			}
+		}
+
+		/// <summary>
+		/// Проверка существования таблицы (создание при необходимости)
+		/// </summary>
+		public void CheckAndAddSpreadSheet()
+		{
+			try
+			{
+				_sheetsService?.Spreadsheets.Get(SpreadSheetId).Execute();
+			}
+			catch
+			{
+				var message = $"{nameof(CheckAndAddSpreadSheet)}: {nameof(SpreadSheetId)} = {SpreadSheetId} is invalid";
+				Program.ConsoleLog(message);
+				Program.Logger.Error(message);
+				SpreadSheetId = CreateNewSpreadSheet(_sheetsService);
+				if (SpreadSheetId == null)
+				{
+					return;
+				}
+
+				var newSpreadSheetMessage = $"{nameof(CheckAndAddSpreadSheet)}: new spreadSheetId = {SpreadSheetId}";
+				Program.ConsoleLog(newSpreadSheetMessage);
+				Program.Logger.Warn(newSpreadSheetMessage);
+			}
+		}
+
+		private static string CreateNewSpreadSheet(SheetsService sheetsService)
+		{
+			var spreadSheet = new Spreadsheet
+			{
+				Properties = new SpreadsheetProperties
+				{
+					Title = SpreadSheetName
+				}
+			};
+
+			var request = sheetsService.Spreadsheets.Create(spreadSheet);
+			request.Fields = "spreadsheetId";
+
+			try
+			{
+				var newSpreadSheet = request.Execute();
+				return newSpreadSheet.SpreadsheetId;
+			}
+			catch (Exception e)
+			{
+				var message = $"{nameof(CreateNewSpreadSheet)}: {e.Message}";
+				Program.ConsoleLog(message);
+				Program.Logger.Error(message);
+				return null;
 			}
 		}
 

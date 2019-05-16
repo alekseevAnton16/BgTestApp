@@ -29,6 +29,13 @@ namespace BGTestApp
 			}
 
 			var googleSheet = new CGoogleSpreadSheet(Settings.Default.SpreadSheetId, Settings.Default.ClientId, Settings.Default.ClientSecret);
+			googleSheet.CheckAndAddSpreadSheet();
+
+			if (googleSheet.SpreadSheetId == null)
+			{
+				return;
+			}
+
 			googleSheet.CheckTableSheets(databases);
 			var timeout = Settings.Default.TimeoutInSeconds * 1000;
 
