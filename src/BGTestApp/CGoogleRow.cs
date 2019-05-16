@@ -1,5 +1,4 @@
 ﻿using System;
-using System.CodeDom;
 using System.Collections.Generic;
 using System.Globalization;
 using Google.Apis.Sheets.v4;
@@ -9,12 +8,30 @@ namespace BGTestApp
 {
 	public static class CGoogleRow
 	{
-		private static readonly List<string> Headers = new List<string> {"Сервер", "База данных", "Размер в ГБ", "Дата обновления"}; 
+		private static readonly List<string> Headers = new List<string> {"Сервер", "База данных", "Размер в ГБ", "Дата обновления"};
+
+		/// <summary>
+		/// Создает строку
+		/// </summary>
+		public static bool CreateRow(SheetsService sheetsService, string spreadSheetId, int? sheetId, ERowType rowType, CPostgreServer server, int lastRowIndex)
+		{
+			switch (rowType)
+			{
+				case ERowType.HeaderRow:
+					return CreateHeaderRow(sheetsService, spreadSheetId, sheetId);
+				case ERowType.DbSizeRow:
+					return AddDbSizeRow(sheetsService, spreadSheetId, sheetId, server, lastRowIndex);
+				case ERowType.FooterRow:
+					return CreateFooterRow(sheetsService, spreadSheetId, sheetId, server, lastRowIndex);
+				default:
+					return false;
+			}
+		}
 
 		/// <summary>
 		/// Создает строку с заголовками.
 		/// </summary>
-		public static bool CreateHeaderRow(SheetsService sheetsService, string spreadSheetId, int? sheetId)
+		private static bool CreateHeaderRow(SheetsService sheetsService, string spreadSheetId, int? sheetId)
 		{
 			var requests = new List<Request>();
 			for (var i = 0; i < Headers.Count; i++)
@@ -66,7 +83,7 @@ namespace BGTestApp
 		/// Добавляет строку в лист.
 		/// </summary>
 		/// <returns>Индекс последней строки в листе.</returns>
-		public static bool AddRow(SheetsService sheetsService, string spreadSheetId, int? sheetId, CPostgreServer server, int lastRowIndex)
+		private static bool AddDbSizeRow(SheetsService sheetsService, string spreadSheetId, int? sheetId, CPostgreServer server, int lastRowIndex)
 		{
 			if (server == null)
 			{
@@ -86,7 +103,7 @@ namespace BGTestApp
 			}
 			catch (Exception ex)
 			{
-				var message = $"{nameof(AddRow)}: {ex.Message}";
+				var message = $"{nameof(AddDbSizeRow)}: {ex.Message}";
 				Program.Logger.Error(message);
 				Program.ConsoleLog(message);
 				return false;
@@ -151,11 +168,11 @@ namespace BGTestApp
 		/// <summary>
 		/// Создает строку с заголовками.
 		/// </summary>
-		public static void CreateFooterRow(SheetsService sheetsService, string spreadSheetId, int? sheetId, CPostgreServer server, int lastRowIndex)
+		private static bool CreateFooterRow(SheetsService sheetsService, string spreadSheetId, int? sheetId, CPostgreServer server, int lastRowIndex)
 		{
 			if (server == null)
 			{
-				return;
+				return false;
 			}
 
 			var request = GetRequestForAddFooterRow(server, sheetId, lastRowIndex);
@@ -167,12 +184,14 @@ namespace BGTestApp
 			try
 			{
 				sheetsService.Spreadsheets.BatchUpdate(batchUpdate, spreadSheetId).Execute();
+				return true;
 			}
 			catch (Exception ex)
 			{
 				var message = $"{nameof(CreateFooterRow)}: {ex.Message}";
 				Program.Logger.Error(message);
 				Program.ConsoleLog(message);
+				return false;
 			}
 		}
 
