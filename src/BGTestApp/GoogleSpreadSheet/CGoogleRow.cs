@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using BGTestApp.Enums;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
 
-namespace BGTestApp
+namespace BGTestApp.GoogleSpreadSheet
 {
 	public static class CGoogleRow
 	{
@@ -124,7 +125,7 @@ namespace BGTestApp
 				}
 			};
 
-			var values = new List<CellData>{serverNameValue, dbNameValue, dbSizeValue, changeDateValue};
+			var values = new List<CellData> {serverNameValue, dbNameValue, dbSizeValue, changeDateValue};
 
 			return new Request
 			{

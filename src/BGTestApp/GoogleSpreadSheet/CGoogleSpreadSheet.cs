@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using BGTestApp.Properties;
+using BGTestApp.Enums;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
 using Google.Apis.Util.Store;
 
-namespace BGTestApp
+namespace BGTestApp.GoogleSpreadSheet
 {
 	public class CGoogleSpreadSheet
 	{
@@ -136,48 +136,6 @@ namespace BGTestApp
 				lastRowIndex = addRowResult ? lastRowIndex + 1 : lastRowIndex;
 				CGoogleRow.AddRow(_sheetsService, SpreadSheetId, sheetId, ERowType.FooterRow, server, lastRowIndex);
 			}
-		}
-		
-		private static void UpdateSpreadSheet(SheetsService sheetsService, string spreadSheetId, string[,] data)
-		{
-			//todo
-			var requests = new List<Request>();
-			for (var i = 0; i < data.GetLength(0); i++)
-			{
-				var values = new List<CellData>();
-				for (var j = 0; j < data.GetLength(1); j++)
-				{
-					values.Add(new CellData
-					{
-						UserEnteredValue = new ExtendedValue
-						{
-							StringValue = data[i, j]
-						}
-					});
-				}
-
-				requests.Add(new Request
-				{
-					UpdateCells = new UpdateCellsRequest
-					{
-						Start = new GridCoordinate
-						{
-							SheetId = 0,
-							RowIndex = i,
-							ColumnIndex = 0,
-						},
-						Rows = new List<RowData> {new RowData {Values = values}},
-						Fields = "userEnteredValue"
-					}
-				});
-			}
-
-			var busr = new BatchUpdateSpreadsheetRequest
-			{
-				Requests = requests
-			};
-
-			sheetsService.Spreadsheets.BatchUpdate(busr, spreadSheetId).Execute();
 		}
 	}
 }

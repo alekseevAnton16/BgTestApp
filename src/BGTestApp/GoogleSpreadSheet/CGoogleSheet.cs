@@ -4,7 +4,7 @@ using System.Linq;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
 
-namespace BGTestApp
+namespace BGTestApp.GoogleSpreadSheet
 {
 	public static class CGoogleSheet
 	{

@@ -1,4 +1,4 @@
-﻿namespace BGTestApp
+﻿namespace BGTestApp.Enums
 {
 	/// <summary>
 	/// Тип строки.
