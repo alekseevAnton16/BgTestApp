@@ -53,7 +53,9 @@ namespace BGTestApp.GoogleSpreadSheet
 				return false;
 			}
 		}
-		
+
+		#region Requests
+
 		/// <summary>
 		/// Получение запроса на добавление заголовка.
 		/// </summary>
@@ -199,5 +201,7 @@ namespace BGTestApp.GoogleSpreadSheet
 				}
 			};
 		}
+
+		#endregion
 	}
 }

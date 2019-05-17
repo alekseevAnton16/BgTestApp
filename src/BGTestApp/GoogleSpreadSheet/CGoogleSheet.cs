@@ -12,6 +12,9 @@ namespace BGTestApp.GoogleSpreadSheet
 		private const string FirstSheetNameInRussian = "Лист1";
 		private const string FirstSheetNameInEnglish = "Sheet1"; 
 
+		/// <summary>
+		/// Возвращает список строк таблицы.
+		/// </summary>
 		public static IList<IList<object>> GetSheetRows(SheetsService sheetsService, string range, string spreadSheetId, out bool isSuccess)
 		{
 			try
@@ -28,62 +31,6 @@ namespace BGTestApp.GoogleSpreadSheet
 				isSuccess = false;
 				return null;
 			}
-		}
-
-		/// <summary>
-		/// Проверяет существующие листы таблицы и создает новые при необходимости.
-		/// </summary>
-		public static bool CheckAndCreateSheets(SheetsService sheetsService, string spreadSheetId, IList<Sheet> allSheets, IReadOnlyCollection<CPostgreServer> postgreServers)
-		{
-			if (sheetsService == null || string.IsNullOrWhiteSpace(spreadSheetId) || allSheets == null || !(postgreServers?.Any() ?? false))
-			{
-				var message = $"{nameof(CheckAndCreateSheets)}: incorrect input parameters";
-				Program.Logger.Error(message);
-				Program.ConsoleLog(message);
-				return false;
-			}
-			
-			var updateResult = UpdateFirstSheet(sheetsService, spreadSheetId, allSheets, postgreServers.First().ServerName);
-			
-			var namesOfServers = postgreServers.Select(x => x.ServerName).ToList();
-			var titlesOfSheets = allSheets.Select(x => x.Properties.Title).ToList();
-			var addResult = CreateSheets(sheetsService, spreadSheetId, namesOfServers, titlesOfSheets);
-
-			return updateResult || addResult;
-		}
-
-		/// <summary>
-		/// Создает новые листы.
-		/// </summary>
-		private static bool CreateSheets(SheetsService sheetsService, string spreadSheetId, List<string> namesOfServers, List<string> titlesOfSheets)
-		{
-			var needUpdateSheets = false;
-			foreach (var serverName in namesOfServers)
-			{
-				if (!titlesOfSheets.Contains(serverName))
-				{
-					GetCreateSheetRequest(sheetsService, spreadSheetId, serverName);
-					needUpdateSheets = true;
-				}
-			}
-
-			return needUpdateSheets;
-		}
-
-		/// <summary>
-		/// Обновляет первый лист новой таблицы.
-		/// </summary>
-		private static bool UpdateFirstSheet(SheetsService sheetsService, string spreadSheetId, IList<Sheet> allSheets, string firstSheetTitle)
-		{
-			if (!allSheets.Any())
-			{
-				return false;
-			}
-
-			var sheetInRussian = allSheets.FirstOrDefault(x => string.Equals(x.Properties.Title, FirstSheetNameInRussian));
-			var sheetInEnglish = allSheets.FirstOrDefault(x => string.Equals(x.Properties.Title, FirstSheetNameInEnglish));
-			var targetSheet = sheetInRussian ?? sheetInEnglish;
-			return UpdateSheets(sheetsService, spreadSheetId, EAction.Update, targetSheet?.Properties?.SheetId, firstSheetTitle);
 		}
 
 		/// <summary>
@@ -106,9 +53,69 @@ namespace BGTestApp.GoogleSpreadSheet
 		}
 
 		/// <summary>
-		/// Создание/удаление листа.
+		/// Проверяет существующие листы таблицы и создает новые при необходимости.
 		/// </summary>
-		private static bool UpdateSheets(SheetsService sheetsService, string spreadSheetId, EAction action, int? sheetId, string sheetName)
+		public static bool CheckAndCreateSheets(SheetsService sheetsService, string spreadSheetId, IList<Sheet> allSheets, IReadOnlyCollection<CPostgreServer> postgreServers)
+		{
+			if (sheetsService == null || string.IsNullOrWhiteSpace(spreadSheetId) || allSheets == null || !(postgreServers?.Any() ?? false))
+			{
+				var message = $"{nameof(CheckAndCreateSheets)}: incorrect input parameters";
+				Program.Logger.Error(message);
+				Program.ConsoleLog(message);
+				return false;
+			}
+			
+			var updateResult = UpdateFirstSheetTitle(sheetsService, spreadSheetId, allSheets, postgreServers.First().ServerName);
+			
+			var namesOfServers = postgreServers.Select(x => x.ServerName).ToList();
+			var titlesOfSheets = allSheets.Select(x => x.Properties.Title).ToList();
+			var addResult = CreateSheets(sheetsService, spreadSheetId, namesOfServers, titlesOfSheets);
+
+			return updateResult || addResult;
+		}
+
+		/// <summary>
+		/// Создает новые листы.
+		/// </summary>
+		private static bool CreateSheets(SheetsService sheetsService, string spreadSheetId, List<string> namesOfServers, List<string> titlesOfSheets)
+		{
+			var needUpdateSheets = false;
+			foreach (var serverName in namesOfServers)
+			{
+				if (!titlesOfSheets.Contains(serverName))
+				{
+					GetCreateSheetRequest(sheetsService, spreadSheetId, serverName);
+					var createResult = UpdateSheet(sheetsService, spreadSheetId, EAction.Add, null, serverName);
+					if (createResult)
+					{
+						needUpdateSheets = true;
+					}
+				}
+			}
+
+			return needUpdateSheets;
+		}
+
+		/// <summary>
+		/// Обновление/ создание листа.
+		/// </summary>
+		private static bool UpdateFirstSheetTitle(SheetsService sheetsService, string spreadSheetId, IList<Sheet> allSheets, string firstSheetTitle)
+		{
+			if (!allSheets.Any())
+			{
+				return false;
+			}
+
+			var sheetInRussian = allSheets.FirstOrDefault(x => string.Equals(x.Properties.Title, FirstSheetNameInRussian));
+			var sheetInEnglish = allSheets.FirstOrDefault(x => string.Equals(x.Properties.Title, FirstSheetNameInEnglish));
+			var targetSheet = sheetInRussian ?? sheetInEnglish;
+			return UpdateSheet(sheetsService, spreadSheetId, EAction.Update, targetSheet?.Properties?.SheetId, firstSheetTitle);
+		}
+
+		/// <summary>
+		/// Создание/обновление листа.
+		/// </summary>
+		private static bool UpdateSheet(SheetsService sheetsService, string spreadSheetId, EAction action, int? sheetId, string sheetName)
 		{
 			var request = action == EAction.Add
 				? GetCreateSheetRequest(sheetsService, spreadSheetId, sheetName)
@@ -120,12 +127,14 @@ namespace BGTestApp.GoogleSpreadSheet
 			}
 			catch (Exception e)
 			{
-				var message = $"{nameof(UpdateSheets)}(action = {action}): {e.Message}";
+				var message = $"{nameof(UpdateSheet)}(action = {action}): {e.Message}";
 				Program.Logger.Error(message);
 				Program.ConsoleLog(message);
 				return false;
 			}
 		}
+
+		#region Requests
 
 		/// <summary>
 		/// Получает запрос на создание листа.
@@ -173,5 +182,7 @@ namespace BGTestApp.GoogleSpreadSheet
 
 			return sheetsService.Spreadsheets.BatchUpdate(batchUpdateSpreadsheetRequest, spreadSheetId);
 		}
+
+		#endregion
 	}
 }

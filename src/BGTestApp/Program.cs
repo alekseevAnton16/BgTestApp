@@ -10,7 +10,7 @@ namespace BGTestApp
 {
 	public class Program
 	{
-		public static ILogger Logger = LogManager.GetCurrentClassLogger();
+		public static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
 
 		private static void Main()
 		{
@@ -29,14 +29,14 @@ namespace BGTestApp
 			}
 
 			var googleSheet = new CGoogleSpreadSheet(Settings.Default.SpreadSheetId, Settings.Default.ClientId, Settings.Default.ClientSecret);
-			googleSheet.CheckAndAddSpreadSheet();
+			googleSheet.ActualizeSpreadSheetId();
 
 			if (googleSheet.SpreadSheetId == null)
 			{
 				return;
 			}
 
-			googleSheet.CheckTableSheets(databases);
+			googleSheet.UpdateTableSheets(databases);
 			var timeout = Settings.Default.TimeoutInSeconds * 1000;
 
 			while (true)

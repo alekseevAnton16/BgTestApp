@@ -86,7 +86,7 @@ namespace BGTestApp.GoogleSpreadSheet
 		/// <summary>
 		/// Проверяет наличие всех необходимых листов в таблице.
 		/// </summary>
-		public void CheckTableSheets(List<CPostgreServer> postgreServers)
+		public void UpdateTableSheets(List<CPostgreServer> postgreServers)
 		{
 			var allSheets = CGoogleSheet.GetAllSheets(_sheetsService, SpreadSheetId);
 			if (CGoogleSheet.CheckAndCreateSheets(_sheetsService, SpreadSheetId, allSheets, postgreServers))
@@ -103,9 +103,9 @@ namespace BGTestApp.GoogleSpreadSheet
 		}
 
 		/// <summary>
-		/// Проверка существования таблицы (создание при необходимости)
+		/// Проверяет актуальность SpreadSheetId, создает новую таблицу в случае неактуального SpreadSheetId, указанного в конфигурационном файле.
 		/// </summary>
-		public void CheckAndAddSpreadSheet()
+		public void ActualizeSpreadSheetId()
 		{
 			try
 			{
@@ -113,7 +113,7 @@ namespace BGTestApp.GoogleSpreadSheet
 			}
 			catch
 			{
-				var message = $"{nameof(CheckAndAddSpreadSheet)}: {nameof(SpreadSheetId)} = {SpreadSheetId} is invalid";
+				var message = $"{nameof(ActualizeSpreadSheetId)}: {nameof(SpreadSheetId)} = {SpreadSheetId} is invalid";
 				Program.ConsoleLog(message);
 				Program.Logger.Error(message);
 				SpreadSheetId = CreateNewSpreadSheet(_sheetsService);
@@ -122,12 +122,15 @@ namespace BGTestApp.GoogleSpreadSheet
 					return;
 				}
 
-				var newSpreadSheetMessage = $"{nameof(CheckAndAddSpreadSheet)}: new spreadSheetId = {SpreadSheetId}";
+				var newSpreadSheetMessage = $"{nameof(ActualizeSpreadSheetId)}: new spreadSheetId = {SpreadSheetId}";
 				Program.ConsoleLog(newSpreadSheetMessage);
 				Program.Logger.Warn(newSpreadSheetMessage);
 			}
 		}
 
+		/// <summary>
+		/// Создает новую таблицу и возвращает ее id.
+		/// </summary>
 		private static string CreateNewSpreadSheet(SheetsService sheetsService)
 		{
 			var spreadSheet = new Spreadsheet
