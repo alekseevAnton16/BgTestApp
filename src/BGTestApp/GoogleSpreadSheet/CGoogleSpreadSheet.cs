@@ -89,14 +89,16 @@ namespace BGTestApp.GoogleSpreadSheet
 		public void UpdateTableSheets(List<CPostgreServer> postgreServers)
 		{
 			var allSheets = CGoogleSheet.GetAllSheets(_sheetsService, SpreadSheetId);
-			if (CGoogleSheet.CheckAndCreateSheets(_sheetsService, SpreadSheetId, allSheets, postgreServers))
+			var needUpdateSheets = CGoogleSheet.CheckAndCreateSheets(_sheetsService, SpreadSheetId, allSheets, postgreServers);
+
+			if (needUpdateSheets)
 			{
 				allSheets = CGoogleSheet.GetAllSheets(_sheetsService, SpreadSheetId);
 			}
 
 			_sheets.Clear();
 
-			if (allSheets != null)
+			if (allSheets?.Any() ?? false)
 			{
 				_sheets.AddRange(allSheets);
 			}

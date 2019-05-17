@@ -65,11 +65,10 @@ namespace BGTestApp.GoogleSpreadSheet
 				return false;
 			}
 			
-			var updateResult = UpdateFirstSheetTitle(sheetsService, spreadSheetId, allSheets, postgreServers.First().ServerName);
+			var updateResult = UpdateFirstSheetTitle(sheetsService, spreadSheetId, ref allSheets, postgreServers.First().ServerName);
 			
 			var namesOfServers = postgreServers.Select(x => x.ServerName).ToList();
-			var titlesOfSheets = allSheets.Select(x => x.Properties.Title).ToList();
-			var addResult = CreateSheets(sheetsService, spreadSheetId, namesOfServers, titlesOfSheets);
+			var addResult = CreateSheets(sheetsService, spreadSheetId, namesOfServers, allSheets);
 
 			return updateResult || addResult;
 		}
@@ -77,14 +76,14 @@ namespace BGTestApp.GoogleSpreadSheet
 		/// <summary>
 		/// Создает новые листы.
 		/// </summary>
-		private static bool CreateSheets(SheetsService sheetsService, string spreadSheetId, List<string> namesOfServers, List<string> titlesOfSheets)
+		private static bool CreateSheets(SheetsService sheetsService, string spreadSheetId, List<string> namesOfServers, IList<Sheet> allSheets)
 		{
 			var needUpdateSheets = false;
+			var titlesOfSheets = allSheets?.Select(x => x.Properties.Title).ToList();
 			foreach (var serverName in namesOfServers)
 			{
-				if (!titlesOfSheets.Contains(serverName))
+				if (!titlesOfSheets?.Contains(serverName) ?? false)
 				{
-					GetCreateSheetRequest(sheetsService, spreadSheetId, serverName);
 					var createResult = UpdateSheet(sheetsService, spreadSheetId, EAction.Add, null, serverName);
 					if (createResult)
 					{
@@ -99,7 +98,7 @@ namespace BGTestApp.GoogleSpreadSheet
 		/// <summary>
 		/// Обновление/ создание листа.
 		/// </summary>
-		private static bool UpdateFirstSheetTitle(SheetsService sheetsService, string spreadSheetId, IList<Sheet> allSheets, string firstSheetTitle)
+		private static bool UpdateFirstSheetTitle(SheetsService sheetsService, string spreadSheetId, ref IList<Sheet> allSheets, string firstSheetTitle)
 		{
 			if (!allSheets.Any())
 			{
@@ -109,7 +108,13 @@ namespace BGTestApp.GoogleSpreadSheet
 			var sheetInRussian = allSheets.FirstOrDefault(x => string.Equals(x.Properties.Title, FirstSheetNameInRussian));
 			var sheetInEnglish = allSheets.FirstOrDefault(x => string.Equals(x.Properties.Title, FirstSheetNameInEnglish));
 			var targetSheet = sheetInRussian ?? sheetInEnglish;
-			return UpdateSheet(sheetsService, spreadSheetId, EAction.Update, targetSheet?.Properties?.SheetId, firstSheetTitle);
+			var updateResult = targetSheet != null && UpdateSheet(sheetsService, spreadSheetId, EAction.Update, targetSheet?.Properties?.SheetId, firstSheetTitle);
+			if (updateResult)
+			{
+				allSheets = GetAllSheets(sheetsService, spreadSheetId);
+			}
+
+			return updateResult;
 		}
 
 		/// <summary>
