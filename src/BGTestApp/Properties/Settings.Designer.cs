@@ -25,7 +25,7 @@ namespace BGTestApp.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute(@"[{""ServerName"" : ""Server1"", ""DatabaseHost"" : ""192.168.4.122"", ""DatabasePort"" : 5432, ""DatabaseName"" : ""nprog"", ""UserId"" : ""krn"", ""Password"" : ""krn"", ""ServerSize"" : ""1000""}, {""ServerName"" : ""Server2"", ""DatabaseHost"" : ""192.168.4.239"", ""DatabasePort"" : 5432, ""DatabaseName"" : ""nprog"", ""UserId"" : ""krn"", ""Password"" : ""krn1015"", ""ServerSize"" : ""1000""}]")]
+        [global::System.Configuration.DefaultSettingValueAttribute(@"[{""ServerName"" : ""Server1"", ""ServerHost"" : ""192.168.4.122"", ""ServerPort"" : 5432, ""DatabaseName"" : ""nprog"", ""UserId"" : ""krn"", ""Password"" : ""krn"", ""ServerSize"" : ""1000""}, {""ServerName"" : ""Server2"", ""ServerHost"" : ""192.168.4.239"", ""ServerPort"" : 5432, ""DatabaseName"" : ""nprog"", ""UserId"" : ""krn"", ""Password"" : ""krn1015"", ""ServerSize"" : ""1000""}]")]
         public string ConnectionStrings {
             get {
                 return ((string)(this["ConnectionStrings"]));

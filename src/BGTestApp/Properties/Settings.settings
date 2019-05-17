@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="ConnectionStrings" Type="System.String" Scope="User">
-      <Value Profile="(Default)">[{"ServerName" : "Server1", "DatabaseHost" : "192.168.4.122", "DatabasePort" : 5432, "DatabaseName" : "nprog", "UserId" : "krn", "Password" : "krn", "ServerSize" : "1000"}, {"ServerName" : "Server2", "DatabaseHost" : "192.168.4.239", "DatabasePort" : 5432, "DatabaseName" : "nprog", "UserId" : "krn", "Password" : "krn1015", "ServerSize" : "1000"}]</Value>
+      <Value Profile="(Default)">[{"ServerName" : "Server1", "ServerHost" : "192.168.4.122", "ServerPort" : 5432, "DatabaseName" : "nprog", "UserId" : "krn", "Password" : "krn", "ServerSize" : "1000"}, {"ServerName" : "Server2", "ServerHost" : "192.168.4.239", "ServerPort" : 5432, "DatabaseName" : "nprog", "UserId" : "krn", "Password" : "krn1015", "ServerSize" : "1000"}]</Value>
     </Setting>
     <Setting Name="SpreadSheetId" Type="System.String" Scope="User">
       <Value Profile="(Default)">1KewdQFRR898O743PqMfOZTcpWouQT6kZVM0oGEvirlo</Value>

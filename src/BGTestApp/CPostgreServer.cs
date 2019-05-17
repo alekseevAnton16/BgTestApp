@@ -22,6 +22,9 @@ namespace BGTestApp
 
 		public double ServerSize { get; private set; }
 
+		/// <summary>
+		/// Обновляет размер БД.
+		/// </summary>
 		public void UpdateDbSize()
 		{
 			try
@@ -50,8 +53,8 @@ namespace BGTestApp
 		{
 			try
 			{
-				var host = json.ContainsKey("DatabaseHost") ? (string) json["DatabaseHost"] : null;
-				var port = json.ContainsKey("DatabasePort") ? (int) json["DatabasePort"] : default(int);
+				var host = json.ContainsKey("ServerHost") ? (string) json["ServerHost"] : null;
+				var port = json.ContainsKey("ServerPort") ? (int) json["ServerPort"] : default(int);
 				var database = json.ContainsKey("DatabaseName") ? (string) json["DatabaseName"] : null;
 				var userId = json.ContainsKey("UserId") ? (string) json["UserId"] : null;
 				var password = json.ContainsKey("Password") ? (string) json["Password"] : null;

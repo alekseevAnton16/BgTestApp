@@ -84,7 +84,7 @@ namespace BGTestApp.GoogleSpreadSheet
 		#endregion
 
 		/// <summary>
-		/// Проверяет наличие всех необходимых листов в таблице.
+		/// Проверяет наличие всех необходимых листов в таблице, добавляя их при необходимости.
 		/// </summary>
 		public void UpdateTableSheets(List<CPostgreServer> postgreServers)
 		{

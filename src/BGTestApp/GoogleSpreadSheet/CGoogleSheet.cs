@@ -13,7 +13,7 @@ namespace BGTestApp.GoogleSpreadSheet
 		private const string FirstSheetNameInEnglish = "Sheet1"; 
 
 		/// <summary>
-		/// Возвращает список строк таблицы.
+		/// Возвращает список строк листа.
 		/// </summary>
 		public static IList<IList<object>> GetSheetRows(SheetsService sheetsService, string range, string spreadSheetId, out bool isSuccess)
 		{
@@ -34,7 +34,7 @@ namespace BGTestApp.GoogleSpreadSheet
 		}
 
 		/// <summary>
-		/// Получает все листы из таблицы.
+		/// Получает все листы таблицы.
 		/// </summary>
 		public static IList<Sheet> GetAllSheets(SheetsService sheetsService, string spreadSheetId)
 		{
@@ -79,10 +79,11 @@ namespace BGTestApp.GoogleSpreadSheet
 		private static bool CreateSheets(SheetsService sheetsService, string spreadSheetId, List<string> namesOfServers, IList<Sheet> allSheets)
 		{
 			var needUpdateSheets = false;
-			var titlesOfSheets = allSheets?.Select(x => x.Properties.Title).ToList();
+			var titlesOfSheetsHashSet = new HashSet<string>();
+			allSheets?.Select(x => x.Properties.Title).ToList().ForEach(x => titlesOfSheetsHashSet.Add(x));
 			foreach (var serverName in namesOfServers)
 			{
-				if (!titlesOfSheets?.Contains(serverName) ?? false)
+				if (!titlesOfSheetsHashSet.Contains(serverName))
 				{
 					var createResult = UpdateSheet(sheetsService, spreadSheetId, EAction.Add, null, serverName);
 					if (createResult)
